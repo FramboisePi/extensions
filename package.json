@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Additional sources for Paperback",
   "scripts": {
-    "install-cli": "mv paperback-cli node_modules/paperback-cli", 
+    "install-cli": "mv paperback-cli node_modules/paperback-cli",
     "start": "tsc && node dist/api.js",
     "build": "tsc",
     "test": "node_modules/.bin/mocha --timeout 300000 -r ts-node/register src/**/*.test.ts",
@@ -17,6 +17,7 @@
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "cheerio": "^1.0.0-rc.5",
+    "paperback-cli": "^1.3.2",
     "paperback-extensions-common": "^2.1.9",
     "pug": "^3.0.0",
     "ts-mocha": "^7.0.0",
