@@ -16,7 +16,6 @@
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "cheerio": "^1.0.0-rc.5",
-    "paperback-cli": "github:FramboisePi/paperback-cli#test-package",
     "paperback-extensions-common": "^2.1.9",
     "ts-mocha": "^7.0.0",
     "tsify": "^4.0.2",
