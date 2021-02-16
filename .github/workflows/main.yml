@@ -26,6 +26,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - run: npm install
+      - run: npm run install-cli
       - run: npm run bundle
       - run: npx typedoc -out bundles/docs
         continue-on-error: true
