@@ -145,7 +145,7 @@ class Bundle extends command_2.default {
          *
          * Following fields must be registered in package.json:
          * {
-         *    name: "The repository name"
+         *    repositoryName: "The repository name"
          *    description: "The repository description"
          * }
          * The following fields can be used:
@@ -193,7 +193,7 @@ class Bundle extends command_2.default {
               }
             */
             const repositoryData = {};
-            repositoryData.repositoryName = packageData.name;
+            repositoryData.repositoryName = packageData.repositoryName;
             repositoryData.repositoryDescription = packageData.description;
             repositoryData.sources = extensionList;
             // The repository can register a custom base URL. If not, this file will try to deduct one from GITHUB_REPOSITORY

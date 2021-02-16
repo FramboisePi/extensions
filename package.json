@@ -1,6 +1,7 @@
 {
-  "name": "Promises Additional Sources",
+  "name": "promises-additional-sources",
   "version": "1.0.0",
+  "repository_name": "[Promises] Additional Sources",
   "description": "Additional sources for Paperback",
   "scripts": {
     "install-cli": "rm -r node_modules/paperback-cli/ && mv paperback-cli/ node_modules/paperback-cli/",
