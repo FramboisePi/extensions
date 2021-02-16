@@ -1,6 +1,7 @@
 {
-  "name": "[PROMISES] Additional Sources",
+  "name": "promises-additional-sources",
   "version": "1.0.0",
+  "repositoryName": "[Promises] Additional Sources",
   "description": "Additional sources for Paperback",
   "scripts": {
     "start": "tsc && node dist/api.js",
