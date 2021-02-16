@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Additional sources for Paperback",
   "scripts": {
-    "install-cli": "mv paperback-cli node_modules/paperback-cli",
+    "install-cli": "rm -r node_modules/paperback-cli/ && mv paperback-cli/ node_modules/paperback-cli/",
     "start": "tsc && node dist/api.js",
     "build": "tsc",
     "test": "node_modules/.bin/mocha --timeout 300000 -r ts-node/register src/**/*.test.ts",
