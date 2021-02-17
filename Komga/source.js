@@ -2618,7 +2618,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Komga = exports.KomgaInfo = exports.parseMangaStatus = void 0;
 const paperback_extensions_common_1 = require("paperback-extensions-common");
-const KOMGA_DOMAIN = 'https://demo.komga.org/api/v1';
+const KOMGA_DOMAIN = 'https://demo.komga.org';
 //const KOMGA_DOMAIN = 'http://192.168.0.23:8081'
 const KOMGA_USERNAME = "demo@komga.org";
 const KOMGA_PASSWORD = "komga-demo";
