@@ -11,7 +11,9 @@ import {
   PagedResults,
   SourceInfo,
   RequestHeaders,
-  TagSection
+  TagSection,
+  UserForm,
+  FormObject
 } from "paperback-extensions-common"
 
 const KOMGA_DOMAIN = 'https://demo.komga.org/api/v1'
@@ -322,5 +324,33 @@ export class Komga extends Source {
 
   getMangaShareUrl(mangaId: string) {
     return `${KOMGA_API_DOMAIN}/series/${mangaId}`
+  }
+
+  async getAppStatefulForm(): Promise<UserForm> {
+    
+    let objects: FormObject[] = []
+    
+    objects.push(createTextFieldObject({
+      id: 'serverAddress',
+      userReadableTitle: 'Server URL',
+      placeholderText: 'http://127.0.0.1:8080',
+      userResponse: await this.stateManager.retrieve('serverAddress')
+    }))
+
+    objects.push(createTextFieldObject({
+      id: 'serverUsername',
+      userReadableTitle: 'Username',
+      placeholderText: 'AnimeLover420',
+      userResponse: await this.stateManager.retrieve('serverUsername')
+    }))
+
+    objects.push(createTextFieldObject({
+      id: 'serverPassword',
+      userReadableTitle: 'Password',
+      placeholderText: 'Some Super Secret Password',
+      userResponse: await this.stateManager.retrieve('serverPassword')
+    }))
+
+    return createUserForm({formElements: objects})
   }
 }
