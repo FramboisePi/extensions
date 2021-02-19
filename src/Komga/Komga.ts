@@ -13,18 +13,26 @@ import {
   RequestHeaders,
   TagSection,
   UserForm,
-  FormObject
+  FormObject,
+  MangaTile
 } from "paperback-extensions-common"
 
-const KOMGA_DOMAIN = 'https://demo.komga.org/api/v1'
-//const KOMGA_DOMAIN = 'http://192.168.0.23:8081'
-const KOMGA_USERNAME = "demo@komga.org"
-const KOMGA_PASSWORD = "komga-demo"
+export const KomgaInfo: SourceInfo = {
+  version: "1.1.1",
+  name: "Komga",
+  icon: "icon.png",
+  author: "Lemon",
+  authorWebsite: "https://github.com/FramboisePi",
+  description: "Extension that pulls manga from Komga demo server",
+  //language: ,
+  hentaiSource: false,
+  websiteBaseURL: "https://komga.org"
+}
 
-const KOMGA_API_DOMAIN = KOMGA_DOMAIN + "/api/v1"
-const AUTHENTIFICATION = "Basic " + Buffer.from(KOMGA_USERNAME + ":" + KOMGA_PASSWORD, 'binary').toString('base64')
+const SUPPORTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf"]
 
-const SUPPORTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+// Number of items requested for paged requests
+const PAGE_SIZE = 40
 
 export const parseMangaStatus = (komgaStatus: string) => {
   switch (komgaStatus) {
@@ -38,18 +46,6 @@ export const parseMangaStatus = (komgaStatus: string) => {
       return MangaStatus.ONGOING
   }
   return MangaStatus.ONGOING
-}
-
-export const KomgaInfo: SourceInfo = {
-  version: "1.1.1",
-  name: "Komga",
-  icon: "icon.png",
-  author: "Lemon",
-  authorWebsite: "https://github.com/FramboisePi",
-  description: "Extension that pulls manga from Komga demo server",
-  //language: ,
-  hentaiSource: false,
-  websiteBaseURL: "https://komga.org"
 }
 
 export class Komga extends Source {
@@ -213,8 +209,9 @@ export class Komga extends Source {
   async searchRequest(searchQuery: SearchRequest, metadata: any): Promise<PagedResults> {
 
     const komgaAPI = await this.getKomgaAPI()
+    let page : number = metadata?.page ?? 0
 
-    let paramsList = ["unpaged=true"]
+    let paramsList = [`page=${page}`, `size=${PAGE_SIZE}`]
 
     if (searchQuery.title !== undefined) {
       paramsList.push("search=" + searchQuery.title.replace(" ", "%20"))
@@ -251,8 +248,12 @@ export class Komga extends Source {
       }))
     }
 
+    // If no series were returned we are on the last page
+    metadata = tiles.length === 0 ? undefined : {page: page + 1}
+
     return createPagedResults({
-      results: tiles
+      results: tiles,
+      metadata
     })
   }
 
@@ -261,30 +262,31 @@ export class Komga extends Source {
     const komgaAPI = await this.getKomgaAPI()
     const authorizationString = await this.getAuthorizationString()
 
-    // Use ?paged=true ?
     const sections = [
       {
         request: createRequestObject({
           url: `${komgaAPI}/series/new`,
+          param: "?page=0&size=20",
           method: "GET",
           headers: {authorization: authorizationString}
         }),
         section: createHomeSection({
             id: 'new',
             title: 'Recently added series',
-            //view_more: true,
+            view_more: true,
         }),
     },
     {
       request: createRequestObject({
         url: `${komgaAPI}/series/updated`,
+        param: "?page=0&size=20",
         method: "GET",
         headers: {authorization: authorizationString}
       }),
       section: createHomeSection({
           id: 'updated',
           title: 'Recently updated series',
-          //view_more: true,
+          view_more: true,
       }),
   },
   ]
@@ -320,31 +322,92 @@ export class Komga extends Source {
   await Promise.all(promises)
   }
 
-  async filterUpdatedManga(mangaUpdatesFoundCallback: (updates: MangaUpdates) => void, time: Date, ids: string[]): Promise<void> {
+  async getViewMoreItems(homepageSectionId: string, metadata: any): Promise<PagedResults | null> {
 
     const komgaAPI = await this.getKomgaAPI()
+    const authorizationString = await this.getAuthorizationString()
+    let page: number = metadata?.page ?? 0
 
     const request = createRequestObject({
-      url: `${komgaAPI}/series/updated/`,
+      url: `${komgaAPI}/series/${homepageSectionId}`,
+      param: `?page=${page}&size=${PAGE_SIZE}`,
       method: "GET",
-      headers: {authorization: await this.getAuthorizationString()}
+      headers: {authorization: authorizationString},
     })
 
     const data = await this.requestManager.schedule(request, 1)
-    let result = typeof data.data === "string" ? JSON.parse(data.data) : data.data
+    const result = typeof data.data === "string" ? JSON.parse(data.data) : data.data
 
-    let foundIds: string[] = []
-
+    let tiles: MangaTile[] = []
     for (let serie of result.content) {
-      let serieUpdated = new Date(serie.metadata.lastModified)
-      if (
-        serieUpdated >= time &&
-        ids.includes(serie)
-      ) {
-        foundIds.push(serie)
+      tiles.push(createMangaTile({
+        id: serie.id,
+        title: createIconText({ text: serie.metadata.title }),
+        image: `${komgaAPI}/series/${serie.id}/thumbnail`,
+        subtitleText: createIconText({ text: "id: " + serie.id }),
+      }))
+    }
+
+    // If no series were returned we are on the last page
+    metadata = tiles.length === 0 ? undefined : {page: page + 1}
+    
+    return createPagedResults({
+        results: tiles,
+        metadata: metadata
+    })
+  }
+
+  async filterUpdatedManga(mangaUpdatesFoundCallback: (updates: MangaUpdates) => void, time: Date, ids: string[]): Promise<void> {
+
+    const komgaAPI = await this.getKomgaAPI()
+    const authorizationString = await this.getAuthorizationString()
+
+    // We make requests of PAGE_SIZE titles to `series/updated/` until we got every titles 
+    // or we got a title which `lastModified` metadata is older than `time`
+    let page = 0
+    let foundIds: string[] = []
+    let loadMore = true
+
+    while (loadMore) {
+
+      const request = createRequestObject({
+        url: `${komgaAPI}/series/updated/`,
+        param: `?page=${page}&size=${PAGE_SIZE}`,
+        method: "GET",
+        headers: {authorization: authorizationString}
+      })
+
+      const data = await this.requestManager.schedule(request, 1)
+      let result = typeof data.data === "string" ? JSON.parse(data.data) : data.data
+
+      for (let serie of result.content) {
+        let serieUpdated = new Date(serie.metadata.lastModified)
+
+        if (serieUpdated >= time) {
+          if (ids.includes(serie)) {
+              foundIds.push(serie)
+          }
+        }
+        else {
+          loadMore = false
+          break
+        }
+      }
+
+      // If no series were returned we are on the last page
+      if (result.content.length === 0){
+        loadMore = false
+      }
+
+      page = page + 1
+
+      if (foundIds.length > 0) {
+        mangaUpdatesFoundCallback(createMangaUpdates({
+          ids: foundIds
+        }))
       }
     }
-    mangaUpdatesFoundCallback(createMangaUpdates({ ids: foundIds }))
+
   }
 
   /*
