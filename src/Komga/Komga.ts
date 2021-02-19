@@ -49,14 +49,26 @@ export const KomgaInfo: SourceInfo = {
   description: "Extension that pulls manga from Komga demo server",
   //language: ,
   hentaiSource: false,
-  websiteBaseURL: KOMGA_DOMAIN
+  websiteBaseURL: "https://komga.org"
 }
 
 export class Komga extends Source {
 
-  globalRequestHeaders(): RequestHeaders {
+  async getAuthorizationString(): Promise<string>{
+    const username = await this.stateManager.retrieve("serverUsername")
+    const password = await this.stateManager.retrieve("serverPassword")
+
+    return "Basic " + Buffer.from(username + ":" + password, 'binary').toString('base64')
+  }
+
+  async getKomgaAPI(): Promise<string>{
+    const serverAddress = await this.stateManager.retrieve("serverAddress")
+    return serverAddress + (serverAddress.slice(-1) === "/" ? "api/v1" : "/api/v1")
+  }
+
+  async globalRequestHeaders(): Promise<RequestHeaders> { 
     return {
-      authorization: AUTHENTIFICATION
+      authorization: await this.getAuthorizationString()
     }
   }
 
@@ -64,11 +76,12 @@ export class Komga extends Source {
     /*
       In Komga a manga is represented by a `serie`
      */
+    const komgaAPI = await this.getKomgaAPI()
 
     let request = createRequestObject({
-      url: `${KOMGA_API_DOMAIN}/series/${mangaId}/`,
+      url: `${komgaAPI}/series/${mangaId}/`,
       method: "GET",
-      headers: {authorization: AUTHENTIFICATION}
+      headers: {authorization: await this.getAuthorizationString()}
     })
 
     const response = await this.requestManager.schedule(request, 1)
@@ -97,7 +110,7 @@ export class Komga extends Source {
     return createManga({
       id: mangaId,
       titles: [metadata.title],
-      image: `${KOMGA_API_DOMAIN}/series/${mangaId}/thumbnail`,
+      image: `${komgaAPI}/series/${mangaId}/thumbnail`,
       rating: 5,
       status: parseMangaStatus(metadata.status),
       langFlag: metadata.language,
@@ -118,11 +131,13 @@ export class Komga extends Source {
       In Komga a chapter is a `book`
      */
 
+    const komgaAPI = await this.getKomgaAPI()
+
     let request = createRequestObject({
-      url: `${KOMGA_API_DOMAIN}/series/${mangaId}/books`,
+      url: `${komgaAPI}/series/${mangaId}/books`,
       param: "?unpaged=true&media_status=READY",
       method: "GET",
-      headers: {authorization: AUTHENTIFICATION}
+      headers: {authorization: await this.getAuthorizationString()}
     })
 
     const response = await this.requestManager.schedule(request, 1)
@@ -149,10 +164,13 @@ export class Komga extends Source {
 
   async getChapterDetails(mangaId: string, chapterId: string): Promise<ChapterDetails> {
 
+    const komgaAPI = await this.getKomgaAPI()
+    const authorizationString = await this.getAuthorizationString()
+
     const request = createRequestObject({
-      url: `${KOMGA_API_DOMAIN}/books/${chapterId}/pages`,
+      url: `${komgaAPI}/books/${chapterId}/pages`,
       method: "GET",
-      headers: {authorization: AUTHENTIFICATION}
+      headers: {authorization: authorizationString}
     })
 
     const data = await this.requestManager.schedule(request, 1)
@@ -161,18 +179,18 @@ export class Komga extends Source {
     
     let pages: string[] = []
     for (let page of result) {
-      if (!SUPPORTED_IMAGE_TYPES.includes(page.mediaType)) {
-        pages.push(`${KOMGA_API_DOMAIN}/books/${chapterId}/pages/${page.number}?convert=png`)
+      if (SUPPORTED_IMAGE_TYPES.includes(page.mediaType)) {
+        pages.push(`${komgaAPI}/books/${chapterId}/pages/${page.number}`)
       } else {
-        pages.push(`${KOMGA_API_DOMAIN}/books/${chapterId}/pages/${page.number}`)
+        pages.push(`${komgaAPI}/books/${chapterId}/pages/${page.number}?convert=png`)
       }
     }
     
-    // Determine the preferred reading direction
+    // Determine the preferred reading direction which is only available in the serie metadata
     let serieRequest = createRequestObject({
-      url: `${KOMGA_API_DOMAIN}/series/${mangaId}/`,
+      url: `${komgaAPI}/series/${mangaId}/`,
       method: "GET",
-      headers: {authorization: AUTHENTIFICATION}
+      headers: {authorization: authorizationString}
     })
 
     const serieResponse = await this.requestManager.schedule(serieRequest, 1)
@@ -194,6 +212,8 @@ export class Komga extends Source {
 
   async searchRequest(searchQuery: SearchRequest, metadata: any): Promise<PagedResults> {
 
+    const komgaAPI = await this.getKomgaAPI()
+
     let paramsList = ["unpaged=true"]
 
     if (searchQuery.title !== undefined) {
@@ -211,10 +231,10 @@ export class Komga extends Source {
     }
 
     const request = createRequestObject({
-      url: `${KOMGA_API_DOMAIN}/series`,
+      url: `${komgaAPI}/series`,
       method: "GET",
       param: paramsString,
-      headers: {authorization: AUTHENTIFICATION}
+      headers: {authorization: await this.getAuthorizationString()}
     })
 
     const data = await this.requestManager.schedule(request, 1)
@@ -226,7 +246,7 @@ export class Komga extends Source {
       tiles.push(createMangaTile({
         id: serie.id,
         title: createIconText({ text: serie.metadata.title }),
-        image: `${KOMGA_API_DOMAIN}/series/${serie.id}/thumbnail`,
+        image: `${komgaAPI}/series/${serie.id}/thumbnail`,
         subtitleText: createIconText({ text: "id: " + serie.id }),
       }))
     }
@@ -238,13 +258,16 @@ export class Komga extends Source {
 
   async getHomePageSections(sectionCallback: (section: HomeSection) => void): Promise<void> {
     
+    const komgaAPI = await this.getKomgaAPI()
+    const authorizationString = await this.getAuthorizationString()
+
     // Use ?paged=true ?
     const sections = [
       {
         request: createRequestObject({
-          url: `${KOMGA_API_DOMAIN}/series/new`,
+          url: `${komgaAPI}/series/new`,
           method: "GET",
-          headers: {authorization: AUTHENTIFICATION}
+          headers: {authorization: authorizationString}
         }),
         section: createHomeSection({
             id: 'new',
@@ -254,9 +277,9 @@ export class Komga extends Source {
     },
     {
       request: createRequestObject({
-        url: `${KOMGA_API_DOMAIN}/series/updated`,
+        url: `${komgaAPI}/series/updated`,
         method: "GET",
-        headers: {authorization: AUTHENTIFICATION}
+        headers: {authorization: authorizationString}
       }),
       section: createHomeSection({
           id: 'updated',
@@ -283,7 +306,7 @@ export class Komga extends Source {
               tiles.push(createMangaTile({
                 id: serie.id,
                 title: createIconText({ text: serie.metadata.title }),
-                image: `${KOMGA_API_DOMAIN}/series/${serie.id}/thumbnail`,
+                image: `${komgaAPI}/series/${serie.id}/thumbnail`,
                 subtitleText: createIconText({ text: "id: " + serie.id }),
               }))
             }
@@ -299,10 +322,12 @@ export class Komga extends Source {
 
   async filterUpdatedManga(mangaUpdatesFoundCallback: (updates: MangaUpdates) => void, time: Date, ids: string[]): Promise<void> {
 
+    const komgaAPI = await this.getKomgaAPI()
+
     const request = createRequestObject({
-      url: `${KOMGA_API_DOMAIN}/series/updated/`,
+      url: `${komgaAPI}/series/updated/`,
       method: "GET",
-      headers: {authorization: "Basic ZGVtb0Brb21nYS5vcmc6a29tZ2EtZGVtbw=="}
+      headers: {authorization: await this.getAuthorizationString()}
     })
 
     const data = await this.requestManager.schedule(request, 1)
@@ -322,9 +347,11 @@ export class Komga extends Source {
     mangaUpdatesFoundCallback(createMangaUpdates({ ids: foundIds }))
   }
 
+  /*
   getMangaShareUrl(mangaId: string) {
     return `${KOMGA_API_DOMAIN}/series/${mangaId}`
   }
+  */
 
   async getAppStatefulForm(): Promise<UserForm> {
     
