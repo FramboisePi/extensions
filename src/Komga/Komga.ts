@@ -20,7 +20,7 @@ import {
 } from "paperback-extensions-common"
 
 export const KomgaInfo: SourceInfo = {
-  version: "1.1.1",
+  version: "1.1.2",
   name: "Komga",
   icon: "icon.png",
   author: "Lemon",
@@ -436,19 +436,19 @@ export class Komga extends Source {
         id: 'serverAddress',
         label: 'Server URL',
         placeholderText: 'http://127.0.0.1:8080',
-        value: (await this.stateManager.retrieve('serverAddress')).value
+        value: await this.stateManager.retrieve('serverAddress')
       }),
       createTextFieldObject({
         id: 'serverUsername',
         label: 'Username',
         placeholderText: 'AnimeLover420',
-        value: (await this.stateManager.retrieve('serverUsername')).value
+        value: await this.stateManager.retrieve('serverUsername')
       }),
       createTextFieldObject({
         id: 'serverPassword',
         label: 'Password',
         placeholderText: 'Some Super Secret Password',
-        value: (await this.stateManager.retrieve('serverPassword')).value
+        value: await this.stateManager.retrieve('serverPassword')
       })
     ]
 
@@ -459,7 +459,7 @@ export class Komga extends Source {
     var promises: Promise<void>[] = []
 
     Object.keys(form).forEach(key => {
-      promises.push(this.stateManager.store(key, {value: form[key]}))
+      promises.push(this.stateManager.store(key, form[key]))
     })
 
     await Promise.all(promises)
