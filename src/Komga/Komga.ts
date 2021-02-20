@@ -86,7 +86,7 @@ export class Komga extends Source {
     let authors: string[] = []
     let artists: string[] = []
 
-    // Other are ignored
+    // Additional roles: colorist, inker, letterer, cover, editor
     for (let entry of booksMetadata.authors) {
       if (entry.role === "writer") {
         authors.push(entry.name)
@@ -244,45 +244,35 @@ export class Komga extends Source {
   }
 
   async getHomePageSections(sectionCallback: (section: HomeSection) => void): Promise<void> {
-    
+    // The source define two homepage sections: new and latest
     const sections = [
-      {
-        request: createRequestObject({
-          url: `${KOMGA_API_DOMAIN}/series/new`,
-          param: "?page=0&size=20",
-          method: "GET",
-          headers: {authorization: AUTHENTIFICATION},
-        }),
-        section: createHomeSection({
-            id: 'new',
-            title: 'Recently added series',
-            view_more: true,
-        }),
-    },
-    {
-      request: createRequestObject({
-        url: `${KOMGA_API_DOMAIN}/series/updated`,
+      createHomeSection({
+        id: 'new',
+        title: 'Recently added series',
+        view_more: true,
+      }),
+      createHomeSection({
+        id: 'updated',
+        title: 'Recently updated series',
+        view_more: true,
+      }),
+    ]
+    const promises: Promise<void>[] = []
+
+    for (const section of sections) {
+      // Let the app load empty tagSections
+      sectionCallback(section)
+
+      const request = createRequestObject({
+        url: `${KOMGA_API_DOMAIN}/series/${section.id}`,
         param: "?page=0&size=20",
         method: "GET",
         headers: {authorization: AUTHENTIFICATION},
-      }),
-      section: createHomeSection({
-          id: 'updated',
-          title: 'Recently updated series',
-          view_more: true,
-      }),
-  },
-  ]
-
-  const promises: Promise<void>[] = []
-
-  for (const section of sections) {
-      // Let the app load empty tagSections
-      sectionCallback(section.section)
+      })
 
       // Get the section data
       promises.push(
-          this.requestManager.schedule(section.request, 1).then(data => {
+          this.requestManager.schedule(request, 1).then(data => {
               
             let result = typeof data.data === "string" ? JSON.parse(data.data) : data.data
 
@@ -295,14 +285,14 @@ export class Komga extends Source {
                 subtitleText: createIconText({ text: "id: " + serie.id }),
               }))
             }
-            section.section.items = tiles
-            sectionCallback(section.section)
+            section.items = tiles
+            sectionCallback(section)
           }),
       )
-  }
+    }
 
-  // Make sure the function completes
-  await Promise.all(promises)
+    // Make sure the function completes
+    await Promise.all(promises)
   }
 
 
@@ -338,7 +328,8 @@ export class Komga extends Source {
         results: tiles,
         metadata: metadata
     })
-}
+  }
+  
   async filterUpdatedManga(mangaUpdatesFoundCallback: (updates: MangaUpdates) => void, time: Date, ids: string[]): Promise<void> {
     
     // We make requests of PAGE_SIZE titles to `series/updated/` until we got every titles 
