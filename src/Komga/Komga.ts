@@ -9,12 +9,14 @@ import {
   MangaStatus,
   MangaUpdates,
   PagedResults,
+  FormObject,
   SourceInfo,
   RequestHeaders,
   TagSection,
   UserForm,
-  FormObject,
-  MangaTile
+  MangaTile,
+  SourceMenu,
+  SourceMenuItemType
 } from "paperback-extensions-common"
 
 export const KomgaInfo: SourceInfo = {
@@ -416,31 +418,50 @@ export class Komga extends Source {
   }
   */
 
-  async getAppStatefulForm(): Promise<UserForm> {
-    
-    let objects: FormObject[] = []
-    
-    objects.push(createTextFieldObject({
-      id: 'serverAddress',
-      userReadableTitle: 'Server URL',
-      placeholderText: 'http://127.0.0.1:8080',
-      userResponse: await this.stateManager.retrieve('serverAddress')
+  async getSourceMenu(): Promise<SourceMenu> {
+    return Promise.resolve(createSourceMenu({
+       items: [
+         createSourceMenuItem({
+           id: "serverSettings",
+           label: "Server Settings",
+           type: SourceMenuItemType.FORM
+         })
+       ]
     }))
+  }
 
-    objects.push(createTextFieldObject({
-      id: 'serverUsername',
-      userReadableTitle: 'Username',
-      placeholderText: 'AnimeLover420',
-      userResponse: await this.stateManager.retrieve('serverUsername')
-    }))
-
-    objects.push(createTextFieldObject({
-      id: 'serverPassword',
-      userReadableTitle: 'Password',
-      placeholderText: 'Some Super Secret Password',
-      userResponse: await this.stateManager.retrieve('serverPassword')
-    }))
+  async getSourceMenuItemForm(itemId: string): Promise<UserForm> {
+    let objects: FormObject[] = [
+      createTextFieldObject({
+        id: 'serverAddress',
+        label: 'Server URL',
+        placeholderText: 'http://127.0.0.1:8080',
+        value: (await this.stateManager.retrieve('serverAddress')).value
+      }),
+      createTextFieldObject({
+        id: 'serverUsername',
+        label: 'Username',
+        placeholderText: 'AnimeLover420',
+        value: (await this.stateManager.retrieve('serverUsername')).value
+      }),
+      createTextFieldObject({
+        id: 'serverPassword',
+        label: 'Password',
+        placeholderText: 'Some Super Secret Password',
+        value: (await this.stateManager.retrieve('serverPassword')).value
+      })
+    ]
 
     return createUserForm({formElements: objects})
+  }
+
+  async submitSourceMenuItemForm(itemId: string, form: any) {
+    var promises: Promise<void>[] = []
+
+    Object.keys(form).forEach(key => {
+      promises.push(this.stateManager.store(key, {value: form[key]}))
+    })
+
+    await Promise.all(promises)
   }
 }
