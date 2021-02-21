@@ -464,6 +464,39 @@ export class Komga extends Source {
       promises.push(this.stateManager.store(key, form[key]))
     })
 
+    // To test these information, we try to make a connection to the server
+    const authorization = "Basic " + Buffer.from(form["serverUsername"] + ":" + form["serverPassword"], 'binary').toString('base64')
+    const serverAddress = form["serverAddress"] + (form["serverAddress"].slice(-1) === "/" ? "api/v1" : "/api/v1")
+
+    let request = createRequestObject({
+      url: `${serverAddress}/series/`,
+      method: "GET",
+      headers: {authorization: authorization}
+    })
+
+    var responseStatus = undefined
+
+    try {
+      const response = await this.requestManager.schedule(request, 1)
+      responseStatus = response.status
+    } catch (error) {
+      // If the server is unavailable error.message will be 'AsyncOperationTimedOutError'
+      throw new Error(`Could not connect to server: ${error.message}`)
+    }
+    
+    switch(responseStatus) { 
+      case 200: {
+        // Successful connection
+        break
+      }
+      case 401: {
+        throw new Error("401 Unauthorized: Invalid credentials")
+      }
+      default: {
+        throw new Error(`Connection failed with status code ${responseStatus}`)
+      }
+    }
+
     await Promise.all(promises)
   }
 }
