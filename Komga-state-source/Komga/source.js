@@ -2558,7 +2558,7 @@ class Komga extends paperback_extensions_common_1.Source {
             let page = (_a = metadata === null || metadata === void 0 ? void 0 : metadata.page) !== null && _a !== void 0 ? _a : 0;
             let paramsList = [`page=${page}`, `size=${PAGE_SIZE}`];
             if (searchQuery.title !== undefined) {
-                paramsList.push("search=" + escape(searchQuery.title));
+                paramsList.push("search=" + encodeURIComponent(searchQuery.title));
             }
             /*
             if (query.status !== undefined) {
@@ -2764,6 +2764,35 @@ class Komga extends paperback_extensions_common_1.Source {
             Object.keys(form).forEach(key => {
                 promises.push(this.stateManager.store(key, form[key]));
             });
+            // To test these information, we try to make a connection to the server
+            const authorization = "Basic " + Buffer.from(form["serverUsername"] + ":" + form["serverPassword"], 'binary').toString('base64');
+            const serverAddress = form["serverAddress"] + (form["serverAddress"].slice(-1) === "/" ? "api/v1" : "/api/v1");
+            let request = createRequestObject({
+                url: `${serverAddress}/series/`,
+                method: "GET",
+                headers: { authorization: authorization }
+            });
+            var responseStatus = undefined;
+            try {
+                const response = yield this.requestManager.schedule(request, 1);
+                responseStatus = response.status;
+            }
+            catch (error) {
+                // If the server is unavailable error.message will be 'AsyncOperationTimedOutError'
+                throw new Error(`Could not connect to server: ${error.message}`);
+            }
+            switch (responseStatus) {
+                case 200: {
+                    // Successful connection
+                    break;
+                }
+                case 401: {
+                    throw new Error("401 Unauthorized: Invalid credentials");
+                }
+                default: {
+                    throw new Error(`Connection failed with status code ${responseStatus}`);
+                }
+            }
             yield Promise.all(promises);
         });
     }
