@@ -226,7 +226,7 @@ export class Komga extends Source {
     let paramsList = [`page=${page}`, `size=${PAGE_SIZE}`]
 
     if (searchQuery.title !== undefined) {
-      paramsList.push("search=" + escape(searchQuery.title))
+      paramsList.push("search=" + encodeURIComponent(searchQuery.title))
     }
     /*
     if (query.status !== undefined) {

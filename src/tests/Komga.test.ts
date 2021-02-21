@@ -75,8 +75,7 @@ describe("Komga Tests", function () {
 
   it("Testing search", async () => {
     let testSearch = createSearchRequest({
-      title: "Kimi",
-      // title: "Space Adventures",
+      title: searchTitle,
     });
 
     let search = await wrapper.searchRequest(source, testSearch);
