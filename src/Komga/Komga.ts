@@ -5,7 +5,6 @@ import {
   ChapterDetails,
   HomeSection,
   SearchRequest,
-  LanguageCode,
   MangaStatus,
   MangaUpdates,
   PagedResults,
@@ -18,6 +17,8 @@ import {
   SourceMenu,
   SourceMenuItemType
 } from "paperback-extensions-common"
+
+import {reverseLangCode} from "./Languages"
 
 export const KomgaInfo: SourceInfo = {
   version: "1.1.2",
@@ -143,14 +144,23 @@ export class Komga extends Source {
     
     let chapters: Chapter[] = []
 
+    // Chapters language is only available on the serie page
+    let requestSerie = createRequestObject({
+      url: `${komgaAPI}/series/${mangaId}/`,
+      method: "GET",
+      headers: {authorization: await this.getAuthorizationString()}
+    })
+    const responseSerie = await this.requestManager.schedule(requestSerie, 1)
+    const resultSerie = typeof responseSerie.data === "string" ? JSON.parse(responseSerie.data) : responseSerie.data
+    const languageCode = reverseLangCode[resultSerie.metadata.language] ?? reverseLangCode['_unknown']
+
     for (let book of result.content) {
       chapters.push(
         createChapter({
           id: book.id,
           mangaId: mangaId,
           chapNum: book.metadata.numberSort,
-          // TODO: langCode
-          langCode: LanguageCode.ENGLISH,
+          langCode: languageCode,
           name: `${book.metadata.number} - ${book.metadata.title} (${book.size})`,          
           time: new Date(book.fileLastModified),
         })
