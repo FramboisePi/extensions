@@ -53,16 +53,22 @@ export const parseMangaStatus = (komgaStatus: string) => {
 
 export class Komga extends Source {
 
+  createAuthorizationString(username: String, password: String) {
+    return "Basic " + Buffer.from(username + ":" + password, 'binary').toString('base64')
+  }
+  createKomgaAPI(serverAddress: String){
+    return serverAddress + (serverAddress.slice(-1) === "/" ? "api/v1" : "/api/v1")
+  }
+
   async getAuthorizationString(): Promise<string>{
     const username = await this.stateManager.retrieve("serverUsername")
     const password = await this.stateManager.retrieve("serverPassword")
-
-    return "Basic " + Buffer.from(username + ":" + password, 'binary').toString('base64')
+    return this.createAuthorizationString(username, password)
   }
 
   async getKomgaAPI(): Promise<string>{
     const serverAddress = await this.stateManager.retrieve("serverAddress")
-    return serverAddress + (serverAddress.slice(-1) === "/" ? "api/v1" : "/api/v1")
+    return this.createKomgaAPI(serverAddress)
   }
 
   async globalRequestHeaders(): Promise<RequestHeaders> { 
@@ -465,8 +471,8 @@ export class Komga extends Source {
     })
 
     // To test these information, we try to make a connection to the server
-    const authorization = "Basic " + Buffer.from(form["serverUsername"] + ":" + form["serverPassword"], 'binary').toString('base64')
-    const serverAddress = form["serverAddress"] + (form["serverAddress"].slice(-1) === "/" ? "api/v1" : "/api/v1")
+    const authorization = this.createAuthorizationString(form["serverUsername"], form["serverPassword"])
+    const serverAddress = this.createKomgaAPI(form["serverAddress"])
 
     let request = createRequestObject({
       url: `${serverAddress}/series/`,
