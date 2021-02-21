@@ -2407,17 +2407,23 @@ exports.parseMangaStatus = (komgaStatus) => {
     return paperback_extensions_common_1.MangaStatus.ONGOING;
 };
 class Komga extends paperback_extensions_common_1.Source {
+    createAuthorizationString(username, password) {
+        return "Basic " + Buffer.from(username + ":" + password, 'binary').toString('base64');
+    }
+    createKomgaAPI(serverAddress) {
+        return serverAddress + (serverAddress.slice(-1) === "/" ? "api/v1" : "/api/v1");
+    }
     getAuthorizationString() {
         return __awaiter(this, void 0, void 0, function* () {
             const username = yield this.stateManager.retrieve("serverUsername");
             const password = yield this.stateManager.retrieve("serverPassword");
-            return "Basic " + Buffer.from(username + ":" + password, 'binary').toString('base64');
+            return this.createAuthorizationString(username, password);
         });
     }
     getKomgaAPI() {
         return __awaiter(this, void 0, void 0, function* () {
             const serverAddress = yield this.stateManager.retrieve("serverAddress");
-            return serverAddress + (serverAddress.slice(-1) === "/" ? "api/v1" : "/api/v1");
+            return this.createKomgaAPI(serverAddress);
         });
     }
     globalRequestHeaders() {
@@ -2765,8 +2771,8 @@ class Komga extends paperback_extensions_common_1.Source {
                 promises.push(this.stateManager.store(key, form[key]));
             });
             // To test these information, we try to make a connection to the server
-            const authorization = "Basic " + Buffer.from(form["serverUsername"] + ":" + form["serverPassword"], 'binary').toString('base64');
-            const serverAddress = form["serverAddress"] + (form["serverAddress"].slice(-1) === "/" ? "api/v1" : "/api/v1");
+            const authorization = this.createAuthorizationString(form["serverUsername"], form["serverPassword"]);
+            const serverAddress = this.createKomgaAPI(form["serverAddress"]);
             let request = createRequestObject({
                 url: `${serverAddress}/series/`,
                 method: "GET",
