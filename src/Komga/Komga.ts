@@ -39,7 +39,7 @@ const PAGE_SIZE = 40
 export const parseMangaStatus = (komgaStatus: string) => {
   switch (komgaStatus) {
     case "ENDED":
-      return MangaStatus.COMPLETED  
+      return MangaStatus.COMPLETED
     case "ONGOING":
       return MangaStatus.ONGOING
     case "ABANDONED":
@@ -95,7 +95,7 @@ export class Komga extends Source {
     let authors: string[] = []
     let artists: string[] = []
 
-    // Other are ignored
+    // Additional roles: colorist, inker, letterer, cover, editor
     for (let entry of booksMetadata.authors) {
       if (entry.role === "writer") {
         authors.push(entry.name)
@@ -216,7 +216,7 @@ export class Komga extends Source {
     let paramsList = [`page=${page}`, `size=${PAGE_SIZE}`]
 
     if (searchQuery.title !== undefined) {
-      paramsList.push("search=" + searchQuery.title.replace(" ", "%20"))
+      paramsList.push("search=" + escape(searchQuery.title))
     }
     /*
     if (query.status !== undefined) {
@@ -264,44 +264,36 @@ export class Komga extends Source {
     const komgaAPI = await this.getKomgaAPI()
     const authorizationString = await this.getAuthorizationString()
 
+    // The source define two homepage sections: new and latest
     const sections = [
-      {
-        request: createRequestObject({
-          url: `${komgaAPI}/series/new`,
-          param: "?page=0&size=20",
-          method: "GET",
-          headers: {authorization: authorizationString}
-        }),
-        section: createHomeSection({
-            id: 'new',
-            title: 'Recently added series',
-            view_more: true,
-        }),
-    },
-    {
-      request: createRequestObject({
-        url: `${komgaAPI}/series/updated`,
+      createHomeSection({
+        id: 'new',
+        title: 'Recently added series',
+        view_more: true,
+      }),
+      createHomeSection({
+        id: 'updated',
+        title: 'Recently updated series',
+        view_more: true,
+      }),
+    ]
+
+    const promises: Promise<void>[] = []
+
+    for (const section of sections) {
+      // Let the app load empty tagSections
+      sectionCallback(section)
+
+      const request = createRequestObject({
+        url: `${komgaAPI}/series/${section.id}`,
         param: "?page=0&size=20",
         method: "GET",
-        headers: {authorization: authorizationString}
-      }),
-      section: createHomeSection({
-          id: 'updated',
-          title: 'Recently updated series',
-          view_more: true,
-      }),
-  },
-  ]
-
-  const promises: Promise<void>[] = []
-
-  for (const section of sections) {
-      // Let the app load empty tagSections
-      sectionCallback(section.section)
+        headers: {authorization: authorizationString},
+      })
 
       // Get the section data
       promises.push(
-          this.requestManager.schedule(section.request, 1).then(data => {
+          this.requestManager.schedule(request, 1).then(data => {
               
             let result = typeof data.data === "string" ? JSON.parse(data.data) : data.data
 
@@ -314,14 +306,14 @@ export class Komga extends Source {
                 subtitleText: createIconText({ text: "id: " + serie.id }),
               }))
             }
-            section.section.items = tiles
-            sectionCallback(section.section)
+            section.items = tiles
+            sectionCallback(section)
           }),
       )
-  }
+    }
 
-  // Make sure the function completes
-  await Promise.all(promises)
+    // Make sure the function completes
+    await Promise.all(promises)
   }
 
   async getViewMoreItems(homepageSectionId: string, metadata: any): Promise<PagedResults | null> {

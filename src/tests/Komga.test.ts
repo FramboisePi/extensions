@@ -14,13 +14,13 @@ describe("Komga Tests", function () {
   // THIS IS THE NEW BIT - By doing this, any retrieval done in your source should properly retrieve these values
   before(function() {
     // This will run before ANY test. Set your state values here
-    source.stateManager.store("serverAddress", "http://192.168.0.23:8081") // Or whatever your endpoint is
+    source.stateManager.store("serverAddress", "https://demo.komga.org") // Or whatever your endpoint is
     source.stateManager.store("serverUsername", "demo@komga.org")
     source.stateManager.store("serverPassword", "komga-demo")
   });
 
-  //var mangaId = "63";
-  var mangaId = "0451Q4Q58E40R";
+  const mangaId = "63";
+  const searchTitle = "Space Adventures";
 
   it("Retrieve Manga Details", async () => {
     let details = await wrapper.getMangaDetails(source, mangaId);
