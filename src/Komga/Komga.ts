@@ -68,14 +68,11 @@ export class Komga extends Source {
   }
 
   async getAuthorizationString(): Promise<string>{
-    const username = await this.stateManager.retrieve("serverUsername")
-    const password = await this.stateManager.retrieve("serverPassword")
-    return this.createAuthorizationString(username, password)
+    return await this.stateManager.retrieve("authorization")
   }
 
   async getKomgaAPI(): Promise<string>{
-    const serverAddress = await this.stateManager.retrieve("serverAddress")
-    return this.createKomgaAPI(serverAddress)
+    return await this.stateManager.retrieve("komgaAPI")
   }
 
   async globalRequestHeaders(): Promise<RequestHeaders> { 
@@ -90,7 +87,7 @@ export class Komga extends Source {
      */
     const komgaAPI = await this.getKomgaAPI()
 
-    let request = createRequestObject({
+    const request = createRequestObject({
       url: `${komgaAPI}/series/${mangaId}/`,
       method: "GET",
       headers: {authorization: await this.getAuthorizationString()}
@@ -145,7 +142,7 @@ export class Komga extends Source {
 
     const komgaAPI = await this.getKomgaAPI()
 
-    let request = createRequestObject({
+    const request = createRequestObject({
       url: `${komgaAPI}/series/${mangaId}/books`,
       param: "?unpaged=true&media_status=READY",
       method: "GET",
@@ -158,7 +155,7 @@ export class Komga extends Source {
     let chapters: Chapter[] = []
 
     // Chapters language is only available on the serie page
-    let requestSerie = createRequestObject({
+    const requestSerie = createRequestObject({
       url: `${komgaAPI}/series/${mangaId}/`,
       method: "GET",
       headers: {authorization: await this.getAuthorizationString()}
@@ -208,7 +205,7 @@ export class Komga extends Source {
     }
     
     // Determine the preferred reading direction which is only available in the serie metadata
-    let serieRequest = createRequestObject({
+    const serieRequest = createRequestObject({
       url: `${komgaAPI}/series/${mangaId}/`,
       method: "GET",
       headers: {authorization: authorizationString}
@@ -261,7 +258,7 @@ export class Komga extends Source {
 
     const data = await this.requestManager.schedule(request, 1)
 
-    let result = typeof data.data === "string" ? JSON.parse(data.data) : data.data
+    const result = typeof data.data === "string" ? JSON.parse(data.data) : data.data
 
     let tiles = []
     for (let serie of result.content) {
@@ -317,7 +314,6 @@ export class Komga extends Source {
       // Get the section data
       promises.push(
           this.requestManager.schedule(request, 1).then(data => {
-              
             let result = typeof data.data === "string" ? JSON.parse(data.data) : data.data
 
             let tiles = []
@@ -424,7 +420,6 @@ export class Komga extends Source {
         }))
       }
     }
-
   }
 
   /*
@@ -477,12 +472,18 @@ export class Komga extends Source {
       promises.push(this.stateManager.store(key, form[key]))
     })
 
-    // To test these information, we try to make a connection to the server
     const authorization = this.createAuthorizationString(form["serverUsername"], form["serverPassword"])
-    const serverAddress = this.createKomgaAPI(form["serverAddress"])
+    const komgaAPI = this.createKomgaAPI(form["serverAddress"])
 
+    // We save the authorization string and api url to not have to generate it for every request
+    promises.push(this.stateManager.store("authorization", authorization))
+    promises.push(this.stateManager.store("komgaAPI", komgaAPI))
+
+    // To test these information, we try to make a connection to the server
+    // We could use a better endpoint to test the connection
     let request = createRequestObject({
-      url: `${serverAddress}/series/`,
+      url: `${komgaAPI}/series/`,
+      param: "?size=1", // We don't want the server to send to many results
       method: "GET",
       headers: {authorization: authorization}
     })

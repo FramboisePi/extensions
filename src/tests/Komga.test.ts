@@ -10,13 +10,19 @@ describe("Komga Tests", function () {
   var chaiAsPromised = require("chai-as-promised");
   chai.use(chaiAsPromised);
 
-
+  const serverAddress = "https://demo.komga.org"
+  const username = "demo@komga.org"
+  const password = "komga-demo"
+  
   // THIS IS THE NEW BIT - By doing this, any retrieval done in your source should properly retrieve these values
   before(function() {
     // This will run before ANY test. Set your state values here
-    source.stateManager.store("serverAddress", "https://demo.komga.org") // Or whatever your endpoint is
-    source.stateManager.store("serverUsername", "demo@komga.org")
-    source.stateManager.store("serverPassword", "komga-demo")
+    source.stateManager.store("serverAddress", serverAddress) // Or whatever your endpoint is
+    source.stateManager.store("serverUsername", username)
+    source.stateManager.store("serverPassword", password)
+
+    source.stateManager.store("authorization", "Basic " + Buffer.from(username + ":" + password, 'binary').toString('base64'))
+    source.stateManager.store("komgaAPI", serverAddress + (serverAddress.slice(-1) === "/" ? "api/v1" : "/api/v1"))
   });
 
   const mangaId = "63";
