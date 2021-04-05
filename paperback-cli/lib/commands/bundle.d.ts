@@ -11,5 +11,5 @@ export default class Bundle extends Command {
     generateSourceInfo(sourceId: string, directoryPath: string): Promise<any>;
     bundleSources(folder?: string): Promise<void>;
     bundle(file: string, sourceDir: string, destDir: string): Promise<void>;
-    generateHomepage(): Promise<void>;
+    generateHomepage(folder?: string): Promise<void>;
 }

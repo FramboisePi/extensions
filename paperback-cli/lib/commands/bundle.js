@@ -25,7 +25,7 @@ class Bundle extends command_2.default {
         versionTime.end();
         this.log();
         const homepageTime = this.time('Homepage Generation', utils_1.default.headingFormat);
-        await this.generateHomepage();
+        await this.generateHomepage(flags.folder);
         homepageTime.end();
         this.log();
         execTime.end();
@@ -141,7 +141,7 @@ class Bundle extends command_2.default {
             }));
         });
     }
-    async generateHomepage() {
+    async generateHomepage(folder = '') {
         /*
          * Generate a homepage for the repository based on the package.json file and the generated versioning.json
          *
@@ -162,7 +162,7 @@ class Bundle extends command_2.default {
          */
         // joining path of directory
         const basePath = process.cwd();
-        const directoryPath = path.join(basePath, 'bundles');
+        const directoryPath = path.join(basePath, 'bundles', folder);
         const packageFilePath = path.join(basePath, 'package.json');
         // homepage.pug file is added to the package during the prepack process
         const pugFilePath = path.join(__dirname, '../website-generation/homepage.pug');
@@ -210,8 +210,8 @@ class Bundle extends command_2.default {
                 }
                 else {
                     const split = github_repository_environment_variable.toLowerCase().split('/');
-                    this.log(`Using base URL deducted from GITHUB_REPOSITORY environment variable: https://${split[0]}.github.io/${split[1]}`);
-                    repositoryData.baseURL = `https://${split[0]}.github.io/${split[1]}`;
+                    this.log(`Using base URL deducted from GITHUB_REPOSITORY environment variable: https://${split[0]}.github.io/${split[1]}${(folder === '') ? '' : '/' + folder.toLowerCase()}`);
+                    repositoryData.baseURL = `https://${split[0]}.github.io/${split[1]}${(folder === '') ? '' : '/' + folder.toLowerCase()}`;
                 }
             }
             else {
@@ -228,7 +228,7 @@ class Bundle extends command_2.default {
             }
             // Compilation of the pug file which is available in website-generation folder
             const htmlCode = pug.compileFile(pugFilePath)(repositoryData);
-            fs.writeFileSync(path.join(basePath, 'bundles', 'index.html'), htmlCode);
+            fs.writeFileSync(path.join(directoryPath, 'index.html'), htmlCode);
         }
     }
 }
