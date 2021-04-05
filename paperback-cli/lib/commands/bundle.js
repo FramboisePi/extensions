@@ -210,8 +210,9 @@ class Bundle extends command_2.default {
                 }
                 else {
                     const split = github_repository_environment_variable.toLowerCase().split('/');
-                    this.log(`Using base URL deducted from GITHUB_REPOSITORY environment variable: https://${split[0]}.github.io/${split[1]}${(folder === '') ? '' : '/' + folder.toLowerCase()}`);
-                    repositoryData.baseURL = `https://${split[0]}.github.io/${split[1]}${(folder === '') ? '' : '/' + folder.toLowerCase()}`;
+                    // The capitalization of folder is important, using folder.toLowerCase() make a non working link
+                    this.log(`Using base URL deducted from GITHUB_REPOSITORY environment variable: https://${split[0]}.github.io/${split[1]}${(folder === '') ? '' : '/' + folder}`);
+                    repositoryData.baseURL = `https://${split[0]}.github.io/${split[1]}${(folder === '') ? '' : '/' + folder}`;
                 }
             }
             else {
