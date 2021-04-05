@@ -15,7 +15,8 @@ import {
   UserForm,
   MangaTile,
   SourceMenu,
-  SourceMenuItemType
+  SourceMenuItemType,
+  TagType
 } from "paperback-extensions-common"
 
 import {reverseLangCode} from "./Languages"
@@ -26,10 +27,16 @@ export const KomgaInfo: SourceInfo = {
   icon: "icon.png",
   author: "Lemon",
   authorWebsite: "https://github.com/FramboisePi",
-  description: "Extension that pulls manga from Komga demo server",
+  description: "Extension that pulls manga from a Komga server",
   //language: ,
   hentaiSource: false,
-  websiteBaseURL: "https://komga.org"
+  websiteBaseURL: "https://komga.org",
+  sourceTags: [
+    {
+        text: "Self hosted",
+        type: TagType.RED
+    }
+]
 }
 
 const SUPPORTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf"]
