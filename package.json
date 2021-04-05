@@ -1,7 +1,8 @@
 {
   "name": "extensions",
   "version": "1.0.0",
-  "description": "Additional sources for Paperback",
+  "repositoryName":"Komga Stateful",
+  "description": "Komga stateful source for Paperback",
   "scripts": {
     "install-cli": "rm -r node_modules/paperback-cli/ && mv paperback-cli/ node_modules/paperback-cli/",
     "start": "tsc && node dist/api.js",
