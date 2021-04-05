@@ -30,6 +30,7 @@ jobs:
           path: bundles
 
       - run: npm install
+      - run: npm run install-cli
       - run: npm run bundle -- --folder=${{ steps.extract_branch.outputs.branch }}
 
       - name: Deploy
