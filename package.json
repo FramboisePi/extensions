@@ -1,10 +1,9 @@
 {
-  "name": "extensions",
+  "name": "extensions-stateful",
   "version": "1.0.0",
-  "repositoryName":"Komga Stateful",
-  "description": "Komga stateful source for Paperback",
+  "repositoryName": "Extensions Stateful",
+  "description": "Stateful sources for Paperback",
   "scripts": {
-    "install-cli": "rm -r node_modules/paperback-cli/ && mv paperback-cli/ node_modules/paperback-cli/",
     "start": "tsc && node dist/api.js",
     "build": "tsc",
     "test": "node_modules/.bin/mocha --timeout 300000 -r ts-node/register src/**/*.test.ts",
@@ -19,8 +18,7 @@
     "chai-as-promised": "^7.1.1",
     "cheerio": "^1.0.0-rc.5",
     "paperback-cli": "^1.3.3",
-    "paperback-extensions-common": "^3.1.0",
-    "pug": "^3.0.2",
+    "paperback-extensions-common": "^3.4.3",
     "ts-mocha": "^7.0.0",
     "tsify": "^4.0.2",
     "typescript": "^3.9.6"
