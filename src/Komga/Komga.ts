@@ -16,7 +16,11 @@ import {
   MangaTile,
   SourceMenu,
   SourceMenuItemType,
-  TagType
+  TagType,
+  ContentRating,
+  RequestInterceptor,
+  Request,
+  Response
 } from "paperback-extensions-common"
 
 import {reverseLangCode} from "./Languages"
@@ -29,7 +33,7 @@ export const KomgaInfo: SourceInfo = {
   authorWebsite: "https://github.com/FramboisePi",
   description: "Extension that pulls manga from a Komga server",
   //language: ,
-  hentaiSource: false,
+  contentRating: ContentRating.EVERYONE,
   websiteBaseURL: "https://komga.org",
   sourceTags: [
     {
@@ -58,6 +62,33 @@ export const parseMangaStatus = (komgaStatus: string) => {
   return MangaStatus.ONGOING
 }
 
+
+export class KomgaRequestInterceptor implements RequestInterceptor {
+  stateManager = createSourceStateManager({})
+
+  async getAuthorizationString(): Promise<string>{    
+    const authorizationString =  await this.stateManager.retrieve("authorization")
+    return authorizationString
+  }
+
+
+  async interceptResponse(response: Response): Promise<Response> {
+    return response
+  }
+
+  async interceptRequest(request: Request): Promise<Request> {
+    const authorizationString = await this.getAuthorizationString()
+
+    if (request.headers === undefined) {
+      request.headers = {}
+    }
+    request.headers.authorization = authorizationString
+
+    return request
+  }
+}
+
+
 export class Komga extends Source {
 
   createAuthorizationString(username: String, password: String) {
@@ -75,11 +106,12 @@ export class Komga extends Source {
     return await this.stateManager.retrieve("komgaAPI")
   }
 
-  async globalRequestHeaders(): Promise<RequestHeaders> { 
-    return {
-      authorization: await this.getAuthorizationString()
-    }
-  }
+  stateManager = createSourceStateManager({})
+
+  requestManager = createRequestManager({
+    requestsPerSecond: 4,
+    interceptor: new KomgaRequestInterceptor()
+  })
 
   async getMangaDetails(mangaId: string): Promise<Manga> {
     /*
@@ -335,7 +367,7 @@ export class Komga extends Source {
     await Promise.all(promises)
   }
 
-  async getViewMoreItems(homepageSectionId: string, metadata: any): Promise<PagedResults | null> {
+  async getViewMoreItems(homepageSectionId: string, metadata: any): Promise<PagedResults> {
 
     const komgaAPI = await this.getKomgaAPI()
     const authorizationString = await this.getAuthorizationString()
