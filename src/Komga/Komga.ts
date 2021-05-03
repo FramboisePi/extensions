@@ -507,10 +507,6 @@ export class Komga extends Source {
     const authorization = this.createAuthorizationString(form["serverUsername"], form["serverPassword"])
     const komgaAPI = this.createKomgaAPI(form["serverAddress"])
 
-    // We save the authorization string and api url to not have to generate it for every request
-    promises.push(this.stateManager.store("authorization", authorization))
-    promises.push(this.stateManager.store("komgaAPI", komgaAPI))
-
     // To test these information, we try to make a connection to the server
     // We could use a better endpoint to test the connection
     let request = createRequestObject({
@@ -542,6 +538,15 @@ export class Komga extends Source {
         throw new Error(`Connection failed with status code ${responseStatus}`)
       }
     }
+
+    // We only want to save the info submerged if the request was successful
+
+    promises.push(this.stateManager.store("serverAddress", form["serverAddress"]))
+    promises.push(this.stateManager.store("serverUsername", form["serverUsername"]))
+    promises.push(this.stateManager.store("serverPassword", form["serverPassword"]))
+    // We save the authorization string and api url to not have to generate it for every request
+    promises.push(this.stateManager.store("authorization", authorization))
+    promises.push(this.stateManager.store("komgaAPI", komgaAPI))
 
     await Promise.all(promises)
   }
