@@ -67,7 +67,12 @@ export class KomgaRequestInterceptor implements RequestInterceptor {
   stateManager = createSourceStateManager({})
 
   async getAuthorizationString(): Promise<string>{    
-    const authorizationString =  await this.stateManager.retrieve("authorization")
+    const authorizationString = await this.stateManager.retrieve("authorization")
+    console.log(`Getting authorizationString : ${authorizationString}`)
+
+    if (authorizationString === null) {
+      throw new Error("Unset credential in source settings")
+    }
     return authorizationString
   }
 
@@ -99,11 +104,23 @@ export class Komga extends Source {
   }
 
   async getAuthorizationString(): Promise<string>{
-    return await this.stateManager.retrieve("authorization")
+    const authorizationString = await this.stateManager.retrieve("authorization")
+    console.log(`Getting authorizationString : ${authorizationString}`)
+
+    if (authorizationString === null) {
+      throw new Error("Unset credential in source settings")
+    }
+    return authorizationString
   }
 
   async getKomgaAPI(): Promise<string>{
-    return await this.stateManager.retrieve("komgaAPI")
+    const komgaAPI = await this.stateManager.retrieve("komgaAPI")
+    console.log(`Getting komgaAPI : ${komgaAPI}`)
+
+    if (komgaAPI === null) {
+      throw new Error("Unset server URL in source settings")
+    }
+    return komgaAPI
   }
 
   stateManager = createSourceStateManager({})
