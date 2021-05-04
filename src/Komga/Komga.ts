@@ -25,7 +25,7 @@ import {
 import {reverseLangCode} from "./Languages"
 
 export const KomgaInfo: SourceInfo = {
-  version: "1.1.2",
+  version: "1.1.3",
   name: "Komga",
   icon: "icon.png",
   author: "Lemon",
