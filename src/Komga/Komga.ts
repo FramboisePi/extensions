@@ -10,7 +10,6 @@ import {
   PagedResults,
   FormObject,
   SourceInfo,
-  RequestHeaders,
   TagSection,
   UserForm,
   MangaTile,
@@ -68,7 +67,6 @@ export class KomgaRequestInterceptor implements RequestInterceptor {
 
   async getAuthorizationString(): Promise<string>{    
     const authorizationString = await this.stateManager.retrieve("authorization")
-    console.log(`Getting authorizationString : ${authorizationString}`)
 
     if (authorizationString === null) {
       throw new Error("Unset credential in source settings")
@@ -114,7 +112,6 @@ export class Komga extends Source {
 
   async getAuthorizationString(): Promise<string>{
     const authorizationString = await this.stateManager.retrieve("authorization")
-    console.log(`Getting authorizationString : ${authorizationString}`)
 
     if (authorizationString === null) {
       throw new Error("Unset credential in source settings")
@@ -124,7 +121,6 @@ export class Komga extends Source {
 
   async getKomgaAPI(): Promise<string>{
     const komgaAPI = await this.stateManager.retrieve("komgaAPI")
-    console.log(`Getting komgaAPI : ${komgaAPI}`)
 
     if (komgaAPI === null) {
       throw new Error("Unset server URL in source settings")
@@ -539,6 +535,7 @@ export class Komga extends Source {
       url: `${komgaAPI}/series/`,
       param: "?size=1", // We don't want the server to send to many results
       method: "GET",
+      incognito: true, // We don't want the authorization to be cached
       headers: {authorization: authorization}
     })
 
