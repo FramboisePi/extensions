@@ -144,7 +144,6 @@ export class Komga extends Source {
     const request = createRequestObject({
       url: `${komgaAPI}/series/${mangaId}/`,
       method: "GET",
-      headers: {authorization: await this.getAuthorizationString()}
     })
 
     const response = await this.requestManager.schedule(request, 1)
@@ -200,7 +199,6 @@ export class Komga extends Source {
       url: `${komgaAPI}/series/${mangaId}/books`,
       param: "?unpaged=true&media_status=READY",
       method: "GET",
-      headers: {authorization: await this.getAuthorizationString()}
     })
 
     const response = await this.requestManager.schedule(request, 1)
@@ -212,7 +210,6 @@ export class Komga extends Source {
     const requestSerie = createRequestObject({
       url: `${komgaAPI}/series/${mangaId}/`,
       method: "GET",
-      headers: {authorization: await this.getAuthorizationString()}
     })
     const responseSerie = await this.requestManager.schedule(requestSerie, 1)
     const resultSerie = typeof responseSerie.data === "string" ? JSON.parse(responseSerie.data) : responseSerie.data
@@ -237,12 +234,10 @@ export class Komga extends Source {
   async getChapterDetails(mangaId: string, chapterId: string): Promise<ChapterDetails> {
 
     const komgaAPI = await this.getKomgaAPI()
-    const authorizationString = await this.getAuthorizationString()
 
     const request = createRequestObject({
       url: `${komgaAPI}/books/${chapterId}/pages`,
       method: "GET",
-      headers: {authorization: authorizationString}
     })
 
     const data = await this.requestManager.schedule(request, 1)
@@ -262,7 +257,6 @@ export class Komga extends Source {
     const serieRequest = createRequestObject({
       url: `${komgaAPI}/series/${mangaId}/`,
       method: "GET",
-      headers: {authorization: authorizationString}
     })
 
     const serieResponse = await this.requestManager.schedule(serieRequest, 1)
@@ -307,7 +301,6 @@ export class Komga extends Source {
       url: `${komgaAPI}/series`,
       method: "GET",
       param: paramsString,
-      headers: {authorization: await this.getAuthorizationString()}
     })
 
     const data = await this.requestManager.schedule(request, 1)
@@ -336,7 +329,6 @@ export class Komga extends Source {
   async getHomePageSections(sectionCallback: (section: HomeSection) => void): Promise<void> {
     
     const komgaAPI = await this.getKomgaAPI()
-    const authorizationString = await this.getAuthorizationString()
 
     // The source define two homepage sections: new and latest
     const sections = [
@@ -362,7 +354,6 @@ export class Komga extends Source {
         url: `${komgaAPI}/series/${section.id}`,
         param: "?page=0&size=20",
         method: "GET",
-        headers: {authorization: authorizationString},
       })
 
       // Get the section data
@@ -392,14 +383,12 @@ export class Komga extends Source {
   async getViewMoreItems(homepageSectionId: string, metadata: any): Promise<PagedResults> {
 
     const komgaAPI = await this.getKomgaAPI()
-    const authorizationString = await this.getAuthorizationString()
     let page: number = metadata?.page ?? 0
 
     const request = createRequestObject({
       url: `${komgaAPI}/series/${homepageSectionId}`,
       param: `?page=${page}&size=${PAGE_SIZE}`,
       method: "GET",
-      headers: {authorization: authorizationString},
     })
 
     const data = await this.requestManager.schedule(request, 1)
@@ -427,7 +416,6 @@ export class Komga extends Source {
   async filterUpdatedManga(mangaUpdatesFoundCallback: (updates: MangaUpdates) => void, time: Date, ids: string[]): Promise<void> {
 
     const komgaAPI = await this.getKomgaAPI()
-    const authorizationString = await this.getAuthorizationString()
 
     // We make requests of PAGE_SIZE titles to `series/updated/` until we got every titles 
     // or we got a title which `lastModified` metadata is older than `time`
@@ -441,7 +429,6 @@ export class Komga extends Source {
         url: `${komgaAPI}/series/updated/`,
         param: `?page=${page}&size=${PAGE_SIZE}`,
         method: "GET",
-        headers: {authorization: authorizationString}
       })
 
       const data = await this.requestManager.schedule(request, 1)
