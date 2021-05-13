@@ -37,10 +37,10 @@ npm run serve
 ```
 
 7. Add it to the app
-In Paperback, go to settings, Sources
-Choose a `Repository name` with at least 5 characters
-Enter your `Repository Base URL`: it will be of the format `http://192.168.0.32:8000` with the computer you are using ip address
-Press `Add repository`
+ * In Paperback, go to settings, Sources
+ * Choose a `Repository name` with at least 5 characters
+ * Enter your `Repository Base URL`: it will be of the format `http://192.168.0.32:8000` with the computer you are using ip address
+ * Press `Add repository`
 
 8. Add the source
-Open the repository you've just added and install the source
+ * Open the repository you've just added and install the source
