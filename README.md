@@ -1,6 +1,42 @@
-# Paperback Sources
-## About Sources
-Sources were a highly requested feature for Paperback as it allows users to read manga that are otherwise not on MangaDex (The default source of the app). The sources are community-driven, and may be updated and changed without requiring an application update. This allows for a rolling development process, implementing changes as they come in, rather than waiting for the application developer to implement new sources and bugfixes. 
+# Komga - Paperback Promise Sources
 
-##  Developing A Source
-To find out more about developing a source, check out the extensions common repo [wiki](https://github.com/Paperback-iOS/extensions-common/wiki/Intro-to-Paperback-Sources), use one of the current implementations in the repo as an example, and/or be sure to ask in the [Discord](https://discord.gg/Ny83JV3)!
+This source works with Paperback 0.5.0 (1.0.6) and newer
+
+## Installation guide
+
+1. Clone this repository
+```bash
+git clone https://github.com/FramboisePi/extensions-promises/
+```
+
+2. Checkout the right branch
+In the folder you've just created execute:
+```bash
+git checkout Komga-promise-source
+```
+
+3. Install packages
+```bash
+npm install
+```
+
+4. Change your server credentials in `/src/Komga/Komga.ts`
+> ```js
+> const KOMGA_DOMAIN = 'http://192.168.0.23:8081'
+> const KOMGA_USERNAME = "demo@komga.org"
+> const KOMGA_PASSWORD = "komga-demo"
+> ```
+
+5. Serve the repo
+```bash
+npm run serve
+```
+
+6. Add it to the app
+In Paperback, go to settings, Sources
+Choose a `Repository name` with at least 5 characters
+Enter your `Repository Base URL`: it will be of the format `http://192.168.0.32:8000` with the computer you are using ip address
+Press `Add repository`
+
+7. Add the source
+Open the repository you've just added and install the source
