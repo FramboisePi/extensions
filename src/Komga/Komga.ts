@@ -15,7 +15,6 @@ import {
   MangaTile
 } from "paperback-extensions-common"
 
-//const KOMGA_DOMAIN = 'https://demo.komga.org'
 const KOMGA_DOMAIN = 'http://192.168.0.23:8081'
 const KOMGA_USERNAME = "demo@komga.org"
 const KOMGA_PASSWORD = "komga-demo"
