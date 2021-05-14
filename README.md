@@ -16,15 +16,10 @@ cd extensions-promises/
 
 3. Checkout the right branch
 ```bash
-git checkout Komga-promise-source
+git checkout Komga-promise-bundled
 ```
 
-4. Install packages
-```bash
-npm install
-```
-
-5. Change your server credentials in `/src/Komga/Komga.ts`
+5. Change your server credentials in `/Komga/source.js` lines 2362, 2363, 2364
 > ```js
 > const KOMGA_DOMAIN = 'http://192.168.0.23:8081'
 > const KOMGA_USERNAME = "demo@komga.org"
@@ -32,8 +27,13 @@ npm install
 > ```
 
 6. Serve the repo
+With python 2
 ```bash
-npm run serve
+python -m SimpleHTTPServer
+```
+or with python 3
+```
+python -m http.server
 ```
 
 7. Add it to the app
